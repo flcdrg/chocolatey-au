@@ -181,7 +181,7 @@ function Update-AUPackages {
                 $message += " ({0:N2}s)" -f $jobseconds
                 Write-Host '  ' $message
 
-                Write-Host $logs.ToString().Trim()
+                Write-Host $logs.ToString().TrimEnd()
                 Write-Host ""
     
                 $result += $pkg
