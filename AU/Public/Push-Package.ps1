@@ -28,7 +28,8 @@ function Push-Package() {
     if (!$packages) { throw 'There is no nupkg file in the directory'}
     if ($api_key) {
         $packages | ForEach-Object {
-            Get-Item $_.FullName | Format-Table | Out-String | Write-Information
+            $_ | Format-Table | Out-String | Write-Information
+            Test-Path $_ | Write-Warning
             Write-Warning "choco push `"$($_.FullName)`" --api-key $api_key --source $push_url $force_push"
             choco push "$($_.FullName)" --api-key $api_key --source $push_url $force_push 
         }
