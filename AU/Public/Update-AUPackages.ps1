@@ -113,19 +113,19 @@ function Update-AUPackages {
 
             if ($job.ChildJobs.Count -gt 0) {
                 if ($job.ChildJobs[0].Error) {
-                    $logs.AppendLine("    Errors: $($job.ChildJobs[0].Error.ReadAll())")
+                    $logs.AppendLine("     Errors: $($job.ChildJobs[0].Error.ReadAll())")
                 }
 
                 if ($job.ChildJobs[0].Warning) {
-                    $logs.AppendLine("    Warnings: $($job.ChildJobs[0].Warning.ReadAll())")
+                    $logs.AppendLine("     Warnings: $($job.ChildJobs[0].Warning.ReadAll())")
                 }
 
                 if ($job.ChildJobs[0].Information) {
-                    $logs.AppendLine("    Information: $($job.ChildJobs[0].Information.ReadAll())")
+                    $logs.AppendLine("     Information: $($job.ChildJobs[0].Information.ReadAll())")
                 }
 
                 if ($job.ChildJobs[0].Verbose) {
-                    $logs.AppendLine("    Verbose: $($job.ChildJobs[0].Verbose.ReadAll())")
+                    $logs.AppendLine("     Verbose: $($job.ChildJobs[0].Verbose.ReadAll())")
                 }
             }
 
@@ -181,7 +181,7 @@ function Update-AUPackages {
                 $message += " ({0:N2}s)" -f $jobseconds
                 Write-Host '  ' $message
 
-                Write-Host $logs.ToString()
+                Write-Host $logs.ToString().Trim()
                 Write-Host ""
     
                 $result += $pkg
