@@ -31,16 +31,14 @@ function Push-Package() {
             $_ | Format-Table | Out-String | Write-Warning
             Test-Path $_ | Write-Warning
 
-            nuget verify -All $_.FullName
-
-            Write-Warning "choco push `'$($_.FullName.TrimEnd())`' --api-key $api_key --source $push_url $force_push --debug"
-            choco push `'$($_.FullName.TrimEnd())`' --api-key $api_key --source $push_url $force_push --debug
+            Write-Warning "choco push $($_.FullName.TrimEnd()) --api-key $api_key --source $push_url $force_push --debug"
+            choco push $($_.FullName.TrimEnd()) --api-key $api_key --source $push_url $force_push --debug
         }
     } else {
         $packages | ForEach-Object {
-            Write-Warning "choco push `"$($_.FullName)`" --source $push_url $force_push"
+            Write-Warning "choco push $($_.FullName) --source $push_url $force_push"
 
-            choco push "$($_.FullName)" --source $push_url $force_push
+            choco push $($_.FullName) --source $push_url $force_push
         }
     }
 }
