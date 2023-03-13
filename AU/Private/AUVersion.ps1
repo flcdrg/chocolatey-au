@@ -10,30 +10,30 @@ class AUVersion : System.IComparable {
         $this.BuildMetadata = $buildMetadata
     }
 
-    AUVersion($input) {
-        if (!$input) { throw 'Input cannot be null.' }
-        $v = [AUVersion]::Parse($input -as [string])
+    AUVersion($version) {
+        if (!$version) { throw 'Input cannot be null.' }
+        $v = [AUVersion]::Parse($version -as [string])
         $this.Version = $v.Version
         $this.Prerelease = $v.Prerelease
         $this.BuildMetadata = $v.BuildMetadata
     }
 
-    static [AUVersion] Parse([string] $input) { return [AUVersion]::Parse($input, $true) }
+    static [AUVersion] Parse([string] $version) { return [AUVersion]::Parse($version, $true) }
 
-    static [AUVersion] Parse([string] $input, [bool] $strict) {
-        if (!$input) { throw 'Version cannot be null.' }
+    static [AUVersion] Parse([string] $version, [bool] $strict) {
+        if (!$version) { throw 'Version cannot be null.' }
         $reference = [ref] $null
-        if (![AUVersion]::TryParse($input, $reference, $strict)) { throw "Invalid version: $input." }
+        if (![AUVersion]::TryParse($version, $reference, $strict)) { throw "Invalid version: $version." }
         return $reference.Value
     }
 
-    static [bool] TryParse([string] $input, [ref] $result) { return [AUVersion]::TryParse($input, $result, $true) }
+    static [bool] TryParse([string] $version, [ref] $result) { return [AUVersion]::TryParse($version, $result, $true) }
 
-    static [bool] TryParse([string] $input, [ref] $result, [bool] $strict) {
+    static [bool] TryParse([string] $version, [ref] $result, [bool] $strict) {
         $result.Value = [AUVersion] $null
-        if (!$input) { return $false }
+        if (!$version) { return $false }
         $pattern = [AUVersion]::GetPattern($strict)
-        if ($input -notmatch $pattern) { return $false }
+        if ($version -notmatch $pattern) { return $false }
         $reference = [ref] $null
         if (![version]::TryParse($Matches['version'], $reference)) { return $false }
         $pr = $Matches['prerelease']
@@ -64,7 +64,7 @@ class AUVersion : System.IComparable {
     [AUVersion] WithVersion([version] $version) { return [AUVersion]::new($version, $this.Prerelease, $this.BuildMetadata) }
 
     [int] CompareTo($obj) {
-        if ($obj -eq $null) { return 1 }
+        if ($null -eq $obj) { return 1 }
         if ($obj -isnot [AUVersion]) { throw "AUVersion expected: $($obj.GetType())" }
         $t = $this.GetParts()
         $o = $obj.GetParts()

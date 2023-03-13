@@ -21,7 +21,7 @@ class AUPackage {
         $this.Name = Split-Path -Leaf $Path
 
         $this.NuspecPath = '{0}{2}{1}.nuspec' -f $this.Path, $this.Name, [IO.Path]::DirectorySeparatorChar
-        if (!(Get-Item $this.NuspecPath -ea ignore)) { throw 'No nuspec file found in the package directory' }
+        if (!(Get-Item $this.NuspecPath -ea ignore)) { throw "No nuspec file found in the package directory $($this.Path)" }
 
         $this.NuspecXml     = [AUPackage]::LoadNuspecFile( $this.NuspecPath )
         $this.NuspecVersion = $this.NuspecXml.package.metadata.version
@@ -75,20 +75,20 @@ class AUPackage {
         $versions | ConvertTo-Json | Set-Content $this.StreamsPath -Encoding UTF8
     }
 
-    Backup()  { 
+    Backup()  {
         $d = ([System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), 'au', $this.Name))
 
         Remove-Item (Join-Path $d '*') -Recurse -ea 0
-        Copy-Item . (Join-Path $d '_backup') -Recurse 
+        Copy-Item . (Join-Path $d '_backup') -Recurse
     }
 
-    [string] SaveAndRestore() { 
+    [string] SaveAndRestore() {
         $d = ([System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), 'au', $this.Name))
 
-        Copy-Item . (Join-Path $d '_output') -Recurse 
+        Copy-Item . (Join-Path $d '_output') -Recurse
         Remove-Item (Join-Path '.' '*') -Recurse
-        Copy-Item ([System.IO.Path]::Combine($d, '_backup', '*')) . -Recurse 
-        
+        Copy-Item ([System.IO.Path]::Combine($d, '_backup', '*')) . -Recurse
+
         return (Join-Path $d '_output')
     }
 

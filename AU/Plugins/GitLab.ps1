@@ -19,9 +19,9 @@ param(
     # Force git commit when package is updated but not pushed.
     [switch] $Force,
 
-    # Commit strategy: 
+    # Commit strategy:
     #  single    - 1 commit with all packages
-    #  atomic    - 1 commit per package    
+    #  atomic    - 1 commit per package
     #  atomictag - 1 commit and tag per package
     [ValidateSet('single', 'atomic', 'atomictag')]
     [string]$commitStrategy = 'single',
@@ -38,7 +38,6 @@ $root = Split-Path $packages[0].Path
 Push-Location $root
 $origin  = git config --get remote.origin.url
 $origin -match '(?<=:/+)[^/]+' | Out-Null
-$machine = $Matches[0]
 
 ### Construct RepoURL to be set as new origin
 $RepoURL = (
@@ -84,12 +83,12 @@ if  ($commitStrategy -like 'atomic*') {
     }
 }
 else {
-    Write-Host "Adding updated packages to git repository: $( $packages | % Name)"
+    Write-Host "Adding updated packages to git repository: $( $packages | ForEach-Object Name)"
     $packages | ForEach-Object { git add -u $_.Path }
     git status
 
     Write-Host "Commiting"
-    $message = "AU: $($packages.Length) updated - $($packages | % Name)"
+    $message = "AU: $($packages.Length) updated - $($packages | ForEach-Object Name)"
     $gist_url = $Info.plugin_results.Gist -split '\n' | Select-Object -Last 1
     $snippet_url = $Info.plugin_results.Snippet -split '\n' | Select-Object -Last 1
     git commit -m "$message`n[skip ci] $gist_url $snippet_url" --allow-empty
@@ -98,7 +97,7 @@ else {
 
 ### Push
 Write-Host "Pushing changes"
-git push -q 
+git push -q
 if ($commitStrategy -eq 'atomictag') {
     write-host 'Atomic Tag Push'
     git push -q --tags

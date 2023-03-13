@@ -52,7 +52,7 @@ function Get-RemoteFiles {
 
     New-Item -Type Directory tools -ea 0 | Out-Null
     $toolsPath = Resolve-Path tools
-    
+
     $ext = ext
     if (!$ext) { throw 'Unknown file type' }
 
@@ -70,7 +70,7 @@ function Get-RemoteFiles {
 
     try {
         $client = New-Object System.Net.WebClient
-        
+
         if ($Latest.Url32) {
             headers($client)
             $base_name = name4url $Latest.Url32

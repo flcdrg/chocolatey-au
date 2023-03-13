@@ -2,19 +2,19 @@ function request( [string]$Url, [int]$Timeout, $Options ) {
     if ([string]::IsNullOrWhiteSpace($url)) {throw 'The URL is empty'}
     $request = [System.Net.WebRequest]::Create($Url)
     if ($Timeout)  { $request.Timeout = $Timeout*1000 }
- 
-    if ($Options.Headers) { 
-        $Options.Headers.Keys | ForEach-Object { 
+
+    if ($Options.Headers) {
+        $Options.Headers.Keys | ForEach-Object {
             if ([System.Net.WebHeaderCollection]::IsRestricted($_)) {
                 $key = $_.Replace('-','')
                 $request.$key = $Options.Headers[$_]
             }
-            else { 
+            else {
                 $request.Headers.add($_, $Options.Headers[$_])
             }
         }
     }
-    
+
     $response = $request.GetResponse()
     $response.Close()
     $response

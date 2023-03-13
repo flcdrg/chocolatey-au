@@ -13,14 +13,14 @@ Install the module in the system.
 - `publish.ps1`  
 Publish module to Powershell Gallery, Chocolatey and Github.
 
-
 ## Build and test
 
 The builded module will be available in the `_build\{version}` directory. Version is by default determined automatically based on the current time.
 
-```
+```powershell
 ./build.ps1
 ```
+
 The following example commands can be run from the repository root:
 
 | Description                                             | Command                              |
@@ -32,7 +32,6 @@ The following example commands can be run from the repository root:
 | Uninstall from the system                               | `./install.ps1 -Remove`              |
 | Run tests (use `Pester` & `Chocolatey` params to limit) | `./test.ps1`                         |
 | Clean temporary build files                             | `git clean -Xfd -e vars.ps1`         |
-
 
 ## Publish
 

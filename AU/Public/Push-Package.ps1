@@ -19,7 +19,7 @@ function Push-Package() {
 
     $push_url =  if ($Env:au_PushUrl) { $Env:au_PushUrl }
                  else { 'https://push.chocolatey.org' }
-                 
+
     $force_push = if ($Env:au_ForcePush) { '--force' }
                   else { '' }
 
@@ -27,8 +27,12 @@ function Push-Package() {
     if (!$All) { $packages = $packages | Select-Object -First 1 }
     if (!$packages) { throw 'There is no nupkg file in the directory'}
     if ($api_key) {
-        $packages | ForEach-Object { choco push $_.Name --api-key $api_key --source $push_url $force_push }
+        $packages | ForEach-Object { choco push $_.FullName --api-key $api_key --source $push_url $force_push }
     } else {
-        $packages | ForEach-Object { choco push $_.Name --source $push_url $force_push }
+        $packages | ForEach-Object {
+            Write-Warning "choco push `"$($_.FullName)`" --source $push_url $force_push"
+
+            choco push "$($_.FullName)" --source $push_url $force_push
+        }
     }
 }

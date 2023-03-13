@@ -44,5 +44,5 @@ $params = @{
 }
 
 # Request
-$res = Invoke-WebRequest @params
+[Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] $res = Invoke-WebRequest @params
 "https://$Domain/snippets/$Id"

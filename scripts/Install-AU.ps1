@@ -1,6 +1,6 @@
 <#
     Intall AU from git repository using given version. Can also be used to install development branches.
-    Git tags are treated as autoritative AU release source.
+    Git tags are treated as authoritative AU release source.
 
     This script is used for build server.
 #>
@@ -14,7 +14,6 @@ param(
 )
 
 $ErrorActionPreference = 'STOP'
-$git_url = 'https://github.com/majkinetor/au.git'
 
 if (!(Get-Command git -ea 0)) { throw 'Git must be installed' }
 [version]$git_version = (git --version) -replace 'git|version|\.windows'

@@ -18,8 +18,8 @@ function md_table($result, $Columns, $MaxErrorLength=150) {
     if (!$Columns) { $Columns = 'Name', 'Updated', 'Pushed', 'RemoteVersion', 'NuspecVersion', 'Error' }
     $res = '|' + ($Columns -join '|') + "|`r`n"
     $res += ((1..$Columns.Length | ForEach-Object { '|---' }) -join '') + "|`r`n"
-    if ( !$au_GalleryPackageRootUrl ) { 
-        $au_GalleryPackageRootUrl = if ($env:au_GalleryPackageRootUrl) { $env:au_GalleryPackageRootUrl } else { 
+    if ( !$au_GalleryPackageRootUrl ) {
+        $au_GalleryPackageRootUrl = if ($env:au_GalleryPackageRootUrl) { $env:au_GalleryPackageRootUrl } else {
                 if ($au_GalleryUrl) { "$au_GalleryUrl/packages" } else { 'https://chocolatey.org/packages' }
         }
     }
@@ -56,7 +56,7 @@ function md_table($result, $Columns, $MaxErrorLength=150) {
                             "[{0}](#{1})" -f $err, $_.Name.ToLower()
                         }
                     }
-                }, 
+                },
                 'Ignored',
                 'IgnoreMessage'
 

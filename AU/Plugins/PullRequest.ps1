@@ -64,7 +64,7 @@ $params = @{
         'Authorization' = ('Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($ApiKey)))
     }
 }
-$response = Invoke-WebRequest @params
+[Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] $response = Invoke-WebRequest @params
 $jsonResponse = $response.Content | ConvertFrom-Json
 $prUrl = $jsonResponse.html_url
 $prNumber = $jsonResponse.number
@@ -75,7 +75,7 @@ if ($Assignees) {
     }
     $params['Uri'] = "$GitHubAPI/repos/$owner/$repo/issues/$prNumber/assignees"
     $params['Body'] = $data | ConvertTo-Json
-    $response = Invoke-WebRequest @params
+    [Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] $response = Invoke-WebRequest @params
 }
 
 if ($Reviewers -or $TeamReviewers) {
@@ -85,7 +85,7 @@ if ($Reviewers -or $TeamReviewers) {
     }
     $params['Uri'] = "$GitHubAPI/repos/$owner/$repo/pulls/$prNumber/requested_reviewers"
     $params['Body'] = $data | ConvertTo-Json
-    $response = Invoke-WebRequest @params
+    [Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] $response = Invoke-WebRequest @params
 }
 
 Write-Host "Pull request sucessfully created: $prUrl"

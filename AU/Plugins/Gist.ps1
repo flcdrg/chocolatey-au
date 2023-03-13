@@ -66,8 +66,9 @@ if ($ApiKey) {
     $params.Headers['Authorization'] = ('Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($ApiKey)))
 }
 
-$Response = Invoke-WebRequest @params
+[Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] $Response = Invoke-WebRequest @params
 if ($Response.StatusCode -in @(200, 201, 304)) {
+
     $JsonResponse = $Response.Content | ConvertFrom-Json
     $GistURL = $JsonResponse.html_url
     $Revision = $JsonResponse.history[0].version

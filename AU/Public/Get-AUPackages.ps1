@@ -11,7 +11,7 @@
     doesn't start with the '_' char (unpublished packages, not considered by Update-AUPackages
     function).
 
-    Function looks in the directory pointed to by the global variable $au_root or, if not set, 
+    Function looks in the directory pointed to by the global variable $au_root or, if not set,
     the current directory.
 
 .EXAMPLE
@@ -25,6 +25,7 @@
     Get all automatic packages  in the directory 'c:\packages' that start with 'cpu-z' or 'p' and package which name is 'copyq'.
 #>
 function Get-AUPackages( [string[]] $Name ) {
+    Write-Verbose "Get-AUPackages: Name $Name"
     $root = $global:au_root
     if (!$root) { $root = $pwd }
 

@@ -82,12 +82,12 @@ if  ($commitStrategy -like 'atomic*') {
     }
 }
 else {
-    Write-Host "Adding updated packages to git repository: $( $packages | % Name)"
+    Write-Host "Adding updated packages to git repository: $( $packages | ForEach-Object Name)"
     $packages | ForEach-Object { git add @gitAddArgs $_.Path }
     git status
 
     Write-Host "Commiting"
-    $message = "AU: $($packages.Length) updated - $($packages | % Name)"
+    $message = "AU: $($packages.Length) updated - $($packages | ForEach-Object Name)"
     $gist_url = $Info.plugin_results.Gist -split '\n' | Select-Object -Last 1
     $snippet_url = $Info.plugin_results.Snippet -split '\n' | Select-Object -Last 1
     git commit -m "$message`n[skip ci] $gist_url $snippet_url" --allow-empty
