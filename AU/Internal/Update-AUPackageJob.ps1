@@ -5,7 +5,6 @@ param (
     $package_path,
     [string]
     $tmp_dir,
-    [System.Collections.Specialized.OrderedDictionary]
     $Options
 )
 function repeat_ignore([ScriptBlock] $Action) {
