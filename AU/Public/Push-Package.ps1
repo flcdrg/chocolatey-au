@@ -33,8 +33,8 @@ function Push-Package() {
 
             nuget verify -All $_.FullName
 
-            Write-Warning "choco push `"$($_.FullName)`" --api-key $api_key --source $push_url $force_push --verbose"
-            choco push "$($_.FullName)" --api-key $api_key --source $push_url $force_push --verbose
+            Write-Warning "choco push `"$($_.FullName)`" --api-key $api_key --source $push_url $force_push --debug"
+            choco push "$($_.FullName)" --api-key $api_key --source $push_url $force_push --debug
         }
     } else {
         $packages | ForEach-Object {
