@@ -42,6 +42,8 @@ function repeat_ignore([ScriptBlock] $Action) {
     $res
 }
 
+Write-Information "Checking for updates for $package_name"
+
 Set-Location $package_path
 $out = (Join-Path $tmp_dir $package_name)
 

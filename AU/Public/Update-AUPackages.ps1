@@ -109,13 +109,14 @@ function Update-AUPackages {
         foreach ($job in (Get-Job | Where-Object state -ne 'Running'  )) {
             $p += 1
 
-            Write-Host $job.Name
             Write-Host "Errors: $($job?.Error?.ReadAll())"
             Write-Host "Warnings: $($job?.Warning?.ReadAll())"
+            Write-Host "Information: $($job?.information?.ReadAll())"
             Write-Host "Verbose: $($job?.Verbose?.ReadAll())"
 
             Write-Host "Errors: $($job?.ChildJobs?[0]?.Error?.ReadAll())"
             Write-Host "Warnings: $($job?.ChildJobs?[0]?.Warning?.ReadAll())"
+            Write-Host "Information: $($job?.ChildJobs?[0]?.Information?.ReadAll())"
             Write-Host "Verbose: $($job?.ChildJobs?[0]?.Verbose?.ReadAll())"
             Write-Host ""
 
