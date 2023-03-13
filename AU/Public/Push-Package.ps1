@@ -30,8 +30,11 @@ function Push-Package() {
         $packages | ForEach-Object {
             $_ | Format-Table | Out-String | Write-Warning
             Test-Path $_ | Write-Warning
-            Write-Warning "choco push `"$($_.FullName)`" --api-key $api_key --source $push_url $force_push"
-            choco push "$($_.FullName)" --api-key $api_key --source $push_url $force_push 
+
+            nuget verify -All $_.FullName
+
+            Write-Warning "choco push `"$($_.FullName)`" --api-key $api_key --source $push_url $force_push --verbose"
+            choco push "$($_.FullName)" --api-key $api_key --source $push_url $force_push --verbose
         }
     } else {
         $packages | ForEach-Object {
