@@ -108,17 +108,26 @@ function Update-AUPackages {
         # Check for completed jobs
         foreach ($job in (Get-Job | Where-Object state -ne 'Running'  )) {
             $p += 1
+            
+            $logs = New-Object System.Text.StringBuilder
 
-            Write-Host "Errors: $($job?.Error?.ReadAll())"
-            Write-Host "Warnings: $($job?.Warning?.ReadAll())"
-            Write-Host "Information: $($job?.information?.ReadAll())"
-            Write-Host "Verbose: $($job?.Verbose?.ReadAll())"
+            if ($job.ChildJobs.Count -gt 0) {
+                if ($job.ChildJobs[0].Error) {
+                    $logs.AppendLine("    Errors: $($job.ChildJobs[0].Error.ReadAll())")
+                }
 
-            Write-Host "Errors: $($job?.ChildJobs?[0]?.Error?.ReadAll())"
-            Write-Host "Warnings: $($job?.ChildJobs?[0]?.Warning?.ReadAll())"
-            Write-Host "Information: $($job?.ChildJobs?[0]?.Information?.ReadAll())"
-            Write-Host "Verbose: $($job?.ChildJobs?[0]?.Verbose?.ReadAll())"
-            Write-Host ""
+                if ($job.ChildJobs[0].Warning) {
+                    $logs.AppendLine("    Warnings: $($job.ChildJobs[0].Warning.ReadAll())")
+                }
+
+                if ($job.ChildJobs[0].Information) {
+                    $logs.AppendLine("    Information: $($job.ChildJobs[0].Information.ReadAll())")
+                }
+
+                if ($job.ChildJobs[0].Verbose) {
+                    $logs.AppendLine("    Verbose: $($job.ChildJobs[0].Verbose.ReadAll())")
+                }
+            }
 
             if ( 'Stopped', 'Failed', 'Completed' -notcontains $job.State) {
                 Write-Host "Invalid job state for $($job.Name): " $job.State
@@ -172,6 +181,9 @@ function Update-AUPackages {
                 $message += " ({0:N2}s)" -f $jobseconds
                 Write-Host '  ' $message
 
+                Write-Host $logs.ToString()
+                Write-Host ""
+    
                 $result += $pkg
             }
         }
