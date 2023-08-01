@@ -294,7 +294,7 @@ function Update-Package {
         $v = $nuspecVersion.Version
         $rev = $v.Revision.ToString()
         try { $revdate = [DateTime]::ParseExact($rev, $date_format, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None) } catch {
-            // swallow exception
+            # swallow exception
         }
         if (($rev -ne -1) -and !$revdate) { return }
 
