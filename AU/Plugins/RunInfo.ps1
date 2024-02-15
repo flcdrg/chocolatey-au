@@ -36,22 +36,22 @@ $Info.plugin_results.RunInfo = @()
 $format = '{0,-15}{1}'
 
 $orig_opts = $Info.Options
-$opts      = deep_clone $orig_opts
-$excluded  = ''
-foreach ($w in $Exclude) {
-    foreach ($key in $Info.Options.Keys) {
-        if ($Info.Options.$key -is [HashTable]) {
-            foreach ($subkey in $Info.Options.$key.Keys) {
-                if ($subkey -like "*$w*") {
-                    $excluded += "$key.$subkey "
-                    $opts.$key.$subkey = '*****'
-                }
-            }
-        }
-    }
-}
+$opts      = $orig_opts | ConvertTo-Json -Depth 4
+# $excluded  = ''
+# foreach ($w in $Exclude) {
+#     foreach ($key in $Info.Options.Keys) {
+#         if ($Info.Options.$key -is [HashTable]) {
+#             foreach ($subkey in $Info.Options.$key.Keys) {
+#                 if ($subkey -like "*$w*") {
+#                     $excluded += "$key.$subkey "
+#                     $opts.$key.$subkey = '*****'
+#                 }
+#             }
+#         }
+#     }
+# }
 
-if ($excluded) { result ($format -f 'Excluded:', $excluded) }
+# if ($excluded) { result ($format -f 'Excluded:', $excluded) }
 result ($format -f 'File:', $Path)
 $Info.Options = $opts
 $Info | Export-CliXML $Path
