@@ -45,7 +45,7 @@
     }
 
     function global:au_GetLatest {
-        $download_page = Invoke-WebRequest https://github.com/hluk/CopyQ/releases -UseBasicParsing
+        [Microsoft.PowerShell.Commands.BasicHtmlWebResponseObject] $download_page = Invoke-WebRequest https://github.com/hluk/CopyQ/releases -UseBasicParsing
 
         $re  = "copyq-.*-setup.exe"
         $url = $download_page.links | ? href -match $re | select -First 1 -expand href
@@ -77,7 +77,7 @@ function Update-Package {
 
         #Specify for which architectures to calculate checksum - all, 32 bit, 64 bit or none.
         [ValidateSet('all', '32', '64', 'none')]
-        [string] $ChecksumFor='all',
+        [string] $ChecksumFor = 'all',
 
         #Timeout for all web operations, by default 100 seconds.
         [int]    $Timeout,
@@ -97,7 +97,7 @@ function Update-Package {
         [string] $Result,
 
         #Backup and restore package.
-        [switch] $WhatIf, 
+        [switch] $WhatIf,
 
         #Disable automatic update of nuspec description from README.md files with first 2 lines skipped.
         [switch] $NoReadme
@@ -105,40 +105,43 @@ function Update-Package {
 
     function check_urls() {
         "URL check" | result
-        $Latest.Keys | Where-Object {$_ -like 'url*' } | ForEach-Object {
+        $Latest.Keys | Where-Object { $_ -like 'url*' } | ForEach-Object {
             $url = $Latest[ $_ ]
             if ($res = check_url $url -Options $Latest.Options) { throw "${res}:$url" } else { "  $url" | result }
         }
     }
 
-    function get_checksum()
-    {
+    function get_checksum() {
         function invoke_installer() {
             if (!(Test-Path tools\chocolateyInstall.ps1)) { "  aborted, chocolateyInstall not found for this package" | result; return }
 
             Import-Module "$choco_tmp_path\helpers\chocolateyInstaller.psm1" -Force -Scope Global
 
             if ($ChecksumFor -eq 'none') { "Automatic checksum calculation is disabled"; return }
-            if ($ChecksumFor -eq 'all')  { $arch = '32','64' } else { $arch = $ChecksumFor }
+            if ($ChecksumFor -eq 'all') { $arch = '32', '64' } else { $arch = $ChecksumFor }
 
             $Env:ChocolateyPackageFolder = [System.IO.Path]::GetFullPath("$Env:TEMP\chocolatey\$($package.Name)") #https://github.com/majkinetor/au/issues/32
             $pkg_path = Join-Path $Env:ChocolateyPackageFolder $global:Latest.Version
             New-Item -Type Directory -Force $pkg_path | Out-Null
 
-            $Env:ChocolateyPackageName         = "chocolatey\$($package.Name)"
-            $Env:ChocolateyPackageVersion      = $global:Latest.Version.ToString()
+            $Env:ChocolateyPackageName = "chocolatey\$($package.Name)"
+            $Env:ChocolateyPackageVersion = $global:Latest.Version.ToString()
             $Env:ChocolateyAllowEmptyChecksums = 'true'
             foreach ($a in $arch) {
                 $Env:chocolateyForceX86 = if ($a -eq '32') { 'true' } else { '' }
                 try {
                     #rm -force -recurse -ea ignore $pkg_path
                     .\tools\chocolateyInstall.ps1 | result
-                } catch {
+                }
+                catch {
                     if ( "$_" -notlike 'au_break: *') { throw $_ } else {
                         $filePath = "$_" -replace 'au_break: '
                         if (!(Test-Path $filePath)) { throw "Can't find file path to checksum" }
 
                         $item = Get-Item $filePath
+
+                        $package.Files += $item.FullName
+                        
                         $type = if ($global:Latest.ContainsKey('ChecksumType' + $a)) { $global:Latest.Item('ChecksumType' + $a) } else { 'sha256' }
                         $hash = (Get-FileHash $item -Algorithm $type | ForEach-Object Hash).ToLowerInvariant()
 
@@ -146,7 +149,8 @@ function Update-Package {
                         if (!$global:Latest.ContainsKey('Checksum' + $a)) {
                             $global:Latest.Add('Checksum' + $a, $hash)
                             "Package downloaded and hash calculated for $a bit version" | result
-                        } else {
+                        }
+                        else {
                             $expected = $global:Latest.Item('Checksum' + $a)
                             if ($hash -ne $expected) { throw "Hash for $a bit version mismatch: actual = '$hash', expected = '$expected'" }
                             "Package downloaded and hash checked for $a bit version" | result
@@ -182,7 +186,7 @@ function Update-Package {
         # This will set the new URLs before the files are downloaded but will replace checksums to empty ones so download will not fail
         #  because checksums are at that moment set for the previous version.
         # SkipNuspecFile is passed so that if things fail here, nuspec file isn't updated; otherwise, on next run
-        #  AU will think that package is the most recent. 
+        #  AU will think that package is the most recent.
         #
         # TODO: This will also leaves other then nuspec files updated which is undesired side effect (should be very rare)
         #
@@ -191,8 +195,8 @@ function Update-Package {
         $c32 = $global:Latest.Checksum32; $c64 = $global:Latest.Checksum64          #https://github.com/majkinetor/au/issues/36
         $global:Latest.Remove('Checksum32'); $global:Latest.Remove('Checksum64')    #  -||-
         update_files -SkipNuspecFile | out-null
-        if ($c32) {$global:Latest.Checksum32 = $c32}
-        if ($c64) {$global:Latest.Checksum64 = $c64}                                #https://github.com/majkinetor/au/issues/36
+        if ($c32) { $global:Latest.Checksum32 = $c32 }
+        if ($c64) { $global:Latest.Checksum64 = $c64 }                                #https://github.com/majkinetor/au/issues/36
 
         $global:Silent = $false
 
@@ -216,17 +220,17 @@ function Update-Package {
             $Latest.Version = [string] $Latest.Version
         }
 
-        if (!$NoCheckUrl) { check_urls }
+        if (!$NoCheckUrl.IsPresent) { check_urls }
 
         "nuspec version: " + $package.NuspecVersion | result
         "remote version: " + $package.RemoteVersion | result
 
         $script:is_forced = $false
         if ([AUVersion] $Latest.Version -gt [AUVersion] $Latest.NuspecVersion) {
-            if (!($NoCheckChocoVersion -or $Force)) {
-                if ( !$au_GalleryPackageRootUrl ) { 
-                    $au_GalleryPackageRootUrl = if ($env:au_GalleryPackageRootUrl) { $env:au_GalleryPackageRootUrl } else { 
-                            if ($au_GalleryUrl) { "$au_GalleryUrl/packages" } else { 'https://chocolatey.org/packages' }
+            if (!($NoCheckChocoVersion.IsPresent -or $Force.IsPresent)) {
+                if ( !$au_GalleryPackageRootUrl ) {
+                    $au_GalleryPackageRootUrl = if ($env:au_GalleryPackageRootUrl) { $env:au_GalleryPackageRootUrl } else {
+                        if ($au_GalleryUrl) { "$au_GalleryUrl/packages" } else { 'https://chocolatey.org/packages' }
                     }
                 }
                 $choco_url = "$au_GalleryPackageRootUrl/{0}/{1}" -f $global:Latest.PackageName, $package.RemoteVersion
@@ -234,10 +238,14 @@ function Update-Package {
                     request $choco_url $Timeout | out-null
                     "New version is available but it already exists in the Chocolatey community feed (disable using `$NoCheckChocoVersion`):`n  $choco_url" | result
                     return
-                } catch { }
+                }
+                catch {
+                    # swallow exception
+                }
             }
-        } else {
-            if (!$Force) {
+        }
+        else {
+            if (!$Force.IsPresent) {
                 'No new version found' | result
                 return
             }
@@ -251,18 +259,19 @@ function Update-Package {
 
         if ($ChecksumFor -ne 'none') { get_checksum } else { 'Automatic checksum skipped' | result }
 
-        if ($WhatIf) { $package.Backup() }
+        if ($WhatIf.IsPresent) { $package.Backup() }
         try {
             if (Test-Path Function:\au_BeforeUpdate) { 'Running au_BeforeUpdate' | result; au_BeforeUpdate $package | result }
-            if (!$NoReadme -and (Test-Path (Join-Path $package.Path 'README.md'))) { Set-DescriptionFromReadme $package -SkipFirst 2 | result }        
+            if (!$NoReadme.IsPresent -and (Test-Path (Join-Path $package.Path 'README.md'))) { Set-DescriptionFromReadme $package -SkipFirst 2 | result }
             update_files
             if (Test-Path Function:\au_AfterUpdate) { 'Running au_AfterUpdate' | result; au_AfterUpdate $package | result }
-        
+
             choco pack --limit-output | result
             if ($LastExitCode -ne 0) { throw "Choco pack failed with exit code $LastExitCode" }
-        } finally {
-            if ($WhatIf) {
-                $save_dir = $package.SaveAndRestore() 
+        }
+        finally {
+            if ($WhatIf.IsPresent) {
+                $save_dir = $package.SaveAndRestore()
                 Write-Warning "Package restored and updates saved to: $save_dir"
             }
         }
@@ -287,10 +296,12 @@ function Update-Package {
         $nuspecVersion = [AUVersion] $Latest.NuspecVersion
         $v = $nuspecVersion.Version
         $rev = $v.Revision.ToString()
-        try { $revdate = [DateTime]::ParseExact($rev, $date_format,[System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None) } catch {}
+        try { $revdate = [DateTime]::ParseExact($rev, $date_format, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None) } catch {
+            # swallow exception
+        }
         if (($rev -ne -1) -and !$revdate) { return }
 
-        $build = if ($v.Build -eq -1) {0} else {$v.Build}
+        $build = if ($v.Build -eq -1) { 0 } else { $v.Build }
         $v = [version] ('{0}.{1}.{2}.{3}' -f $v.Major, $v.Minor, $build, $d)
         $package.RemoteVersion = $nuspecVersion.WithVersion($v).ToString()
         $Latest.Version = $package.RemoteVersion -as $Latest.Version.GetType()
@@ -306,10 +317,9 @@ function Update-Package {
         $global:Latest += $latest
     }
 
-    function update_files( [switch]$SkipNuspecFile )
-    {
+    function update_files( [switch]$SkipNuspecFile ) {
         'Updating files' | result
-        '  $Latest data:' | result;  ($global:Latest.keys | Sort-Object | ForEach-Object { $v=$global:Latest[$_]; "    {0,-25} {1,-12} {2}" -f $_, "($( if ($v) { $v.GetType().Name } ))", $v }) | result
+        '  $Latest data:' | result; ($global:Latest.keys | Sort-Object | ForEach-Object { $v = $global:Latest[$_]; "    {0,-25} {1,-12} {2}" -f $_, "($( if ($v) { $v.GetType().Name } ))", $v }) | result
 
         if (!$SkipNuspecFile) {
             "  $(Split-Path $package.NuspecPath -Leaf)" | result
@@ -321,7 +331,8 @@ function Update-Package {
             if ($script:is_forced) {
                 if ($package.RemoteVersion -eq $package.NuspecVersion) {
                     $msg = "    version not changed as it already uses 'revision': {0}" -f $package.NuspecVersion
-                } else {
+                }
+                else {
                     $msg = "    using Chocolatey fix notation: {0} -> {1}" -f $package.NuspecVersion, $package.RemoteVersion
                 }
             }
@@ -360,50 +371,50 @@ function Update-Package {
 
         $input | ForEach-Object {
             $package.Result += $_
-            if (!$NoHostOutput) { Write-Host $_ }
+            if (!$NoHostOutput.IsPresent) { Write-Host $_ }
         }
     }
 
     if ($PSCmdlet.MyInvocation.ScriptName -eq '') {
         Write-Verbose 'Running outside of the script'
         if (!(Test-Path update.ps1)) { return "Current directory doesn't contain ./update.ps1 script" } else { return ./update.ps1 }
-    } else { Write-Verbose 'Running inside the script' }
+    }
+    else { Write-Verbose 'Running inside the script' }
 
     # Assign parameters from global variables with the prefix `au_` if they are bound
     (Get-Command $PSCmdlet.MyInvocation.InvocationName).Parameters.Keys | ForEach-Object {
         if ($PSBoundParameters.Keys -contains $_) { return }
         $value = Get-Variable "au_$_" -Scope Global -ea Ignore | ForEach-Object Value
-        if ($value -ne $null) {
+        if ($null -ne $value) {
             Set-Variable $_ $value
             Write-Verbose "Parameter $_ set from global variable au_${_}: $value"
         }
     }
 
-    if ($WhatIf) {  Write-Warning "WhatIf passed - package files will not be changed" }
+    if ($WhatIf.IsPresent) { Write-Warning "WhatIf passed - package files will not be changed" }
 
     $package = [AUPackage]::new( $pwd )
     if ($Result) { Set-Variable -Scope Global -Name $Result -Value $package }
 
-    $global:Latest = @{PackageName = $package.Name}
+    $global:Latest = @{PackageName = $package.Name }
 
     if ($PSVersionTable.PSVersion.major -ge 6) {
         $AvailableTls = [enum]::GetValues('Net.SecurityProtocolType') | Where-Object { $_ -ge 'Tls' } # PowerShell 6+ does not support SSL3, so use TLS minimum
-    } else {
+    }
+    else {
         # https://github.com/majkinetor/au/issues/206
         $AvailableTls = [enum]::GetValues('Net.SecurityProtocolType') # This way we do not try to add something that is not supported on every version of Windows like Tls13
         #$AvailableTls = [enum]::GetValues('Net.SecurityProtocolType') | Where-Object { $_ -ge 'Tls' } If we want to enforce a minimum version
     }
 
-    $AvailableTls.ForEach({[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor $_})
-    
+    $AvailableTls.ForEach({ [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor $_ })
 
-    
     $module = $MyInvocation.MyCommand.ScriptBlock.Module
     "{0} - checking updates using {1} version {2}" -f $package.Name, $module.Name, $module.Version | result
     try {
         $res = au_GetLatest | Select-Object -Last 1
         $global:au_Latest = $global:Latest
-        if ($res -eq $null) { throw 'au_GetLatest returned nothing' }
+        if ($null -eq $res) { throw 'au_GetLatest returned nothing' }
 
         if ($res -eq 'ignore') { return $res }
 
@@ -412,7 +423,8 @@ function Update-Package {
 
         if ($global:au_Force) { $Force = $true }
         if ($global:au_IncludeStream) { $IncludeStream = $global:au_IncludeStream }
-    } catch {
+    }
+    catch {
         throw "au_GetLatest failed`n$_"
     }
 
@@ -432,16 +444,17 @@ function Update-Package {
                 throw "`$IncludeStream must be either a String, a Double or an Array but is $($IncludeStream.GetType())"
             }
             if ($IncludeStream -is [double]) { $IncludeStream = $IncludeStream -as [string] }
-            if ($IncludeStream -is [string]) { 
+            if ($IncludeStream -is [string]) {
                 # Forcing type in order to handle case when only one version is included
                 [Array] $IncludeStream = $IncludeStream -split ',' | ForEach-Object { $_.Trim() }
             }
-        } elseif ($Force) {
+        }
+        elseif ($Force.IsPresent) {
             # When forcing update, a single stream is expected
             # By default, we take the first one (i.e. the most recent one)
             $IncludeStream = @($streams | Select-Object -First 1)
         }
-        if ($Force -and (!$IncludeStream -or $IncludeStream.Length -ne 1)) { throw 'A single stream must be included when forcing package update' }
+        if ($Force.IsPresent -and (!$IncludeStream -or $IncludeStream.Length -ne 1)) { throw 'A single stream must be included when forcing package update' }
 
         if ($IncludeStream) { $streams = @($streams | Where-Object { $_ -in $IncludeStream }) }
         # Let's reverse the order in order to process streams starting with the oldest one
@@ -457,7 +470,7 @@ function Update-Package {
             '' | result
             "*** Stream: $_ ***" | result
 
-            if ($stream -eq $null) { throw "au_GetLatest's $_ stream returned nothing" }
+            if ($null -eq $stream) { throw "au_GetLatest's $_ stream returned nothing" }
             if ($stream -eq 'ignore') {
                 $stream | result
                 return
@@ -483,7 +496,8 @@ function Update-Package {
             $package.RemoteVersion = $_.RemoteVersion
             $package.Updated = $true
         }
-    } else {
+    }
+    else {
         '' | result
         set_latest $res $package.NuspecVersion
         process_stream
